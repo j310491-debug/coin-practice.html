@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>100元以內硬幣付錢練習</title>
+    <style>
+        /* 整體介面設定 */
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+            background-color: #fcf3cf; /* 溫暖的淺黃色背景 */
+            margin: 0; padding: 10px;
+            display: flex; flex-direction: column; align-items: center;
+            height: 100dvh; box-sizing: border-box;
+            touch-action: manipulation; user-select: none;
+        }
+
+        #game-container {
+            width: 100%; max-width: 600px;
+            background-color: #ffffff; border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 15px; box-sizing: border-box;
+            display: flex; flex-direction: column; gap: 15px;
+            flex: 1; overflow: hidden;
+        }
+
+        /* 商店區：顯示題目 */
+        #shop-area {
+            display: flex; align-items: center; justify-content: center; gap: 20px;
+            background-color: #e8f5e9; border-radius: 15px; padding: 15px;
+            border: 4px solid #81c784; flex-shrink: 0;
+        }
+
+        #item-img { font-size: 5rem; }
+        #item-info { display: flex; flex-direction: column; align-items: flex-start; }
+        #item-name { font-size: 2rem; font-weight: bold; color: #2e7d32; }
+        #item-price { font-size: 3rem; font-weight: bold; color: #d32f2f; }
+
+        /* 付錢托盤區：學生放硬幣的地方 */
+        #tray-area {
+            flex: 1; display: flex; flex-direction: column;
+            background-color: #e3f2fd; border: 4px dashed #90caf9; border-radius: 15px;
+            padding: 10px; overflow-y: auto;
+        }
+        
+        #tray-header {
+            font-size: 1.5rem; font-weight: bold; color: #1565c0; text-align: center; margin-bottom: 10px;
+        }
+
+        #tray-coins {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align-content: flex-start;
+        }
+
+        /* 硬幣的 CSS 視覺設計 */
+        .coin {
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 50%; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2), inset 0 -3px 0 rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        .coin:active { transform: translateY(3px); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+        /* 區分不同面額的大小與顏色 */
+        .coin-1 { width: 50px; height: 50px; font-size: 1.8rem; background-color: #d7ccc8; color: #5d4037; border: 2px solid #a1887f; }
+        .coin-5 { width: 55px; height: 55px; font-size: 2rem; background-color: #f5f5f5; color: #424242; border: 2px solid #bdbdbd; }
+        .coin-10 { width: 65px; height: 65px; font-size: 2.2rem; background-color: #e0e0e0; color: #212121; border: 3px solid #9e9e9e; }
+        .coin-50 { width: 75px; height: 75px; font-size: 2.5rem; background-color: #fff59d; color: #f57f17; border: 3px solid #fbc02d; }
+
+        /* 錢包區：提供學生選擇硬幣 */
+        #wallet-area {
+            display: flex; justify-content: space-around; align-items: center;
+            background-color: #fff3e0; border-radius: 15px; padding: 15px 5px;
+            border: 4px solid #ffb74d; flex-shrink: 0;
+        }
+
+        /* 動畫回饋 */
+        #thumbs-up-feedback {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 12rem; z-index: 200; opacity: 0; pointer-events: none;
+        }
+        .show-thumbs-up { animation: popUpThumbs 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .shake-error { animation: shake 0.4s; border-color: #f44336 !important; background-color: #ffebee !important; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-10px);} 75% {transform: translateX(10px);} }
+        @keyframes popUpThumbs {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            70% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+        }
+
+        @media (max-width: 400px) {
+            #item-img { font-size: 4rem; }
+            #item-name { font-size: 1.5rem; }
+            #item-price { font-size: 2.5rem; }
+            .coin-1 { width: 45px; height: 45px; font-size: 1.5rem; }
+            .coin-5 { width: 50px; height: 50px; font-size: 1.6rem; }
+            .coin-10 { width: 55px; height: 55px; font-size: 1.8rem; }
+            .coin-50 { width: 65px; height: 65px; font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- 商店區 -->
+        <div id="shop-area">
+            <div id="item-img">🍎</div>
+            <div id="item-info">
+                <div id="item-name">蘋果</div>
+                <div id="item-price">12 元</div>
+            </div>
+        </div>
+
+        <!-- 托盤區 (已付金額) -->
+        <div id="tray-area">
+            <div id="tray-header">目前放了：<span id="current-total-text" style="color: #d32f2f; font-size: 2rem;">0</span> 元</div>
+            <div id="tray-coins"></div>
+        </div>
+
+        <!-- 錢包區 (提供選擇) -->
+        <div id="wallet-area">
+            <div class="coin coin-1" onclick="addCoin(1)">1</div>
+            <div class="coin coin-5" onclick="addCoin(5)">5</div>
+            <div class="coin coin-10" onclick="addCoin(10)">10</div>
+            <div class="coin coin-50" onclick="addCoin(50)">50</div>
+        </div>
+    </div>
+
+    <!-- 視覺回饋 -->
+    <div id="thumbs-up-feedback">👍</div>
+
+    <script>
+        // ==========================================
+        // 老師出題區 (100元以內的商品題庫)
+        // 格式：["商品名稱", 價格, "圖片檔名或Emoji"]
+        // ==========================================
+        const shopItems = [
+            ["橡皮擦", 8, "🧽"],
+            ["養樂多", 12, "🥤"],
+            ["鉛筆", 15, "✏️"],
+            ["蘋果", 20, "🍎"],
+            ["麵包", 25, "🥐"],
+            ["牛奶", 35, "🥛"],
+            ["三角飯糰", 42, "🍙"],
+            ["色紙", 55, "🟦"],
+            ["彩色筆", 85, "🖍️"],
+            ["故事書", 99, "📖"]
+        ];
+
+        // 系統變數
+        let currentItem = null;
+        let currentTotal = 0;
+        let trayCoinsArray = []; // 記錄托盤裡的硬幣
+
+        const itemImg = document.getElementById('item-img');
+        const itemName = document.getElementById('item-name');
+        const itemPrice = document.getElementById('item-price');
+        const currentTotalText = document.getElementById('current-total-text');
+        const trayCoinsContainer = document.getElementById('tray-coins');
+        const trayArea = document.getElementById('tray-area');
+        const thumbsUpFeedback = document.getElementById('thumbs-up-feedback');
+
+        // 載入新題目
+        function loadNewItem() {
+            // 隨機選題
+            const randomIndex = Math.floor(Math.random() * shopItems.length);
+            currentItem = {
+                name: shopItems[randomIndex][0],
+                price: shopItems[randomIndex][1],
+                img: shopItems[randomIndex][2]
+            };
+
+            // 渲染商品資訊
+            itemName.innerText = currentItem.name;
+            itemPrice.innerText = currentItem.price + " 元";
+            
+            if (currentItem.img.includes('.') || currentItem.img.includes('http')) {
+                itemImg.innerHTML = `<img src="${currentItem.img}" style="max-height: 80px; border-radius: 10px;">`;
+            } else {
+                itemImg.innerText = currentItem.img;
+            }
+
+            // 清空托盤
+            currentTotal = 0;
+            trayCoinsArray = [];
+            updateTrayDisplay();
+        }
+
+        // 點擊錢包硬幣加入托盤
+        function addCoin(value) {
+            // 防爆掉機制：如果加上這枚硬幣會超過標價，則震動提示並拒絕加入
+            if (currentTotal + value > currentItem.price) {
+                trayArea.classList.add('shake-error');
+                setTimeout(() => trayArea.classList.remove('shake-error'), 400);
+                return; // 中斷函數，硬幣不加入
+            }
+
+            currentTotal += value;
+            trayCoinsArray.push(value);
+            // 排序硬幣，讓大面額在前面，視覺較整齊
+            trayCoinsArray.sort((a, b) => b - a); 
+            updateTrayDisplay();
+            checkSuccess();
+        }
+
+        // 點擊托盤硬幣退回錢包
+        function removeCoin(index) {
+            currentTotal -= trayCoinsArray[index];
+            trayCoinsArray.splice(index, 1);
+            updateTrayDisplay();
+        }
+
+        // 更新托盤畫面與金額
+        function updateTrayDisplay() {
+            currentTotalText.innerText = currentTotal;
+            trayCoinsContainer.innerHTML = '';
+
+            trayCoinsArray.forEach((coinValue, index) => {
+                const coinEl = document.createElement('div');
+                coinEl.className = `coin coin-${coinValue}`;
+                coinEl.innerText = coinValue;
+                // 允許點擊托盤裡的硬幣來移除它
+                coinEl.onclick = () => removeCoin(index);
+                trayCoinsContainer.appendChild(coinEl);
+            });
+        }
+
+        // 檢查是否付錢成功
+        function checkSuccess() {
+            if (currentTotal === currentItem.price) {
+                // 播放讚的動畫
+                thumbsUpFeedback.classList.remove('show-thumbs-up');
+                void thumbsUpFeedback.offsetWidth; 
+                thumbsUpFeedback.classList.add('show-thumbs-up');
+                
+                // 延遲 1.5 秒後換下一題
+                setTimeout(() => {
+                    loadNewItem();
+                }, 1500);
+            }
+        }
+
+        // 啟動程式
+        loadNewItem();
+    </script>
+</body>
+</html>
